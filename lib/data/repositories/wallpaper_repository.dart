@@ -1,7 +1,9 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter_wallpaper/flutter_wallpaper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:palette_generator/palette_generator.dart';
 
 import '../../domain/entities/wallpaper.dart' as entity;
 import '../datasources/wallpaper_local_datasource.dart';
@@ -39,7 +41,21 @@ class WallpaperRepositoryImpl implements WallpaperRepository {
           final imageFile = File(pickedFile.path);
           if (await imageFile.exists()) {
             final savedPath = await localDataSource.saveImage(imageFile);
-            final wallpaper = WallpaperModel(path: savedPath, createdAt: DateTime.now());
+            
+            String? colorHex;
+            try {
+              final imageProvider = FileImage(File(savedPath));
+              final paletteGenerator = await PaletteGenerator.fromImageProvider(
+                imageProvider,
+                size: const Size(200, 200),
+                region: const Rect.fromLTRB(0, 0, 200, 200),
+                maximumColorCount: 4,
+              );
+              final color = paletteGenerator.dominantColor?.color ?? paletteGenerator.vibrantColor?.color ?? paletteGenerator.mutedColor?.color ?? Colors.grey[800]!;
+              colorHex = '#${color.value.toRadixString(16).padLeft(8, '0')}'; 
+            } catch (_) {}
+
+            final wallpaper = WallpaperModel(path: savedPath, createdAt: DateTime.now(), colorHex: colorHex);
             await localDataSource.addWallpaper(wallpaper);
           }
         } catch (_) {

@@ -105,24 +105,4 @@ class WallpaperProvider with ChangeNotifier {
       notifyListeners();
     }
   }
-
-  Future<Color> getDominantColor(String path) async {
-    if (_colorCache.containsKey(path)) {
-      return _colorCache[path]!;
-    }
-    try {
-      final imageProvider = FileImage(File(path));
-      final paletteGenerator = await PaletteGenerator.fromImageProvider(
-        imageProvider,
-        size: const Size(200, 200),
-        region: const Rect.fromLTRB(0, 0, 200, 200),
-        maximumColorCount: 4,
-      );
-      final color = paletteGenerator.dominantColor?.color ?? paletteGenerator.vibrantColor?.color ?? paletteGenerator.mutedColor?.color ?? Colors.grey[800]!;
-      _colorCache[path] = color;
-      return color;
-    } catch (_) {
-      return Colors.grey[800]!;
-    }
-  }
 }
