@@ -8,7 +8,7 @@
 
 | Home Gallery | Wallpaper Preview & Actions |
 | --- | --- |
-| ![Home Gallery](screenshots/home.png) | ![Preview](screenshots/preview.png) |
+| ![Home Gallery](screenshots/home_v2.png) | ![Preview](screenshots/preview_v2.png) |
 
 ---
 
