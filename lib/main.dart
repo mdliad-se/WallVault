@@ -7,6 +7,9 @@ import 'domain/usecases/add_wallpaper_from_gallery.dart';
 import 'domain/usecases/delete_wallpaper.dart';
 import 'domain/usecases/get_wallpapers.dart';
 import 'domain/usecases/set_wallpaper.dart';
+import 'domain/usecases/extract_palette.dart';
+import 'domain/usecases/rename_wallpaper.dart';
+import 'domain/usecases/update_wallpaper_album.dart';
 import 'presentation/providers/wallpaper_provider.dart';
 import 'presentation/screens/home_screen.dart';
 
@@ -49,12 +52,30 @@ class MyApp extends StatelessWidget {
             Provider.of<WallpaperRepository>(context, listen: false),
           ),
         ),
+        Provider<ExtractPalette>(
+          create: (context) => ExtractPalette(
+            Provider.of<WallpaperRepository>(context, listen: false),
+          ),
+        ),
+        Provider<RenameWallpaper>(
+          create: (context) => RenameWallpaper(
+            Provider.of<WallpaperRepository>(context, listen: false),
+          ),
+        ),
+        Provider<UpdateWallpaperAlbum>(
+          create: (context) => UpdateWallpaperAlbum(
+            Provider.of<WallpaperRepository>(context, listen: false),
+          ),
+        ),
         ChangeNotifierProvider<WallpaperProvider>(
           create: (context) => WallpaperProvider(
             getWallpapers: Provider.of<GetWallpapers>(context, listen: false),
             addWallpaper: Provider.of<AddWallpaperFromGallery>(context, listen: false),
             deleteWallpaper: Provider.of<DeleteWallpaper>(context, listen: false),
             setWallpaper: Provider.of<SetWallpaper>(context, listen: false),
+            extractPalette: Provider.of<ExtractPalette>(context, listen: false),
+            renameWallpaper: Provider.of<RenameWallpaper>(context, listen: false),
+            updateWallpaperAlbum: Provider.of<UpdateWallpaperAlbum>(context, listen: false),
           ),
         ),
       ],

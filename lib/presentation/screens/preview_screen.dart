@@ -64,30 +64,36 @@ class PreviewScreen extends StatelessWidget {
                 const SizedBox(height: 32),
                 
                 // Title Banner Row
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 28,
-                      height: 28,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: domColor, width: 4),
-                        boxShadow: [
-                          BoxShadow(color: domColor.withAlpha(100), blurRadius: 10, spreadRadius: 2)
-                        ]
+                GestureDetector(
+                  onTap: () => _renameWallpaper(context),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: domColor, width: 4),
+                          boxShadow: [
+                            BoxShadow(color: domColor.withAlpha(100), blurRadius: 10, spreadRadius: 2)
+                          ]
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    const Text(
-                      'Vault Image',
-                      style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
-                    ),
-                  ],
+                      const SizedBox(width: 16),
+                      Text(
+                        wallpaper.name,
+                        style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(Icons.edit, color: Colors.white54, size: 20),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 48),
                 
-                // Action Buttons (Asymmetrical Pills)
+                // Action Buttons (Asymmetrical Pills) -> Now Three Buttons
                 Row(
                   children: [
                     // SET Button
@@ -97,7 +103,7 @@ class PreviewScreen extends StatelessWidget {
                           backgroundColor: domColor,
                           foregroundColor: textColor,
                           padding: const EdgeInsets.symmetric(vertical: 20),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
                         onPressed: () {
                           showModalBottomSheet(
@@ -107,11 +113,26 @@ class PreviewScreen extends StatelessWidget {
                             builder: (context) => _buildSetOptions(context, domColor, textColor),
                           );
                         },
-                        icon: const Icon(Icons.check, size: 22),
-                        label: const Text('SET', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: 1.2)),
+                        icon: const Icon(Icons.check, size: 18),
+                        label: const Text('SET', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.0)),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 8),
+                    // ALBUM Button
+                    Expanded(
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.white10,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 20),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        onPressed: () => _setAlbum(context),
+                        icon: const Icon(Icons.folder, size: 18),
+                        label: const Text('ALBUM', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.0)),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
                     // DELETE Button
                     Expanded(
                       child: OutlinedButton.icon(
@@ -119,11 +140,11 @@ class PreviewScreen extends StatelessWidget {
                           foregroundColor: domColor,
                           side: BorderSide(color: domColor, width: 2),
                           padding: const EdgeInsets.symmetric(vertical: 20),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
                         onPressed: () => _deleteWallpaper(context, wallpaper),
-                        icon: Icon(Icons.delete, color: domColor, size: 22),
-                        label: Text('DELETE', style: TextStyle(color: domColor, fontSize: 18, fontWeight: FontWeight.w800, letterSpacing: 1.2)),
+                        icon: Icon(Icons.delete, color: domColor, size: 18),
+                        label: Text('DEL', style: TextStyle(color: domColor, fontSize: 14, fontWeight: FontWeight.w800, letterSpacing: 1.0)),
                       ),
                     ),
                   ],
@@ -249,6 +270,140 @@ class PreviewScreen extends StatelessWidget {
       if (!context.mounted) return;
       Navigator.pop(context); // Go back home
     }
+  }
+
+  Future<void> _renameWallpaper(BuildContext context) async {
+    final controller = TextEditingController(text: wallpaper.name);
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF1C1C1E),
+        title: const Text('Rename Wallpaper', style: TextStyle(color: Colors.white)),
+        content: TextField(
+          controller: controller,
+          style: const TextStyle(color: Colors.white),
+          decoration: const InputDecoration(
+            hintText: 'Enter new name',
+            hintStyle: TextStyle(color: Colors.white54),
+            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
+            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white)),
+          ),
+          autofocus: true,
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel', style: TextStyle(color: Colors.white70))),
+          TextButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('Save', style: TextStyle(color: Color(0xFFE47C56)))),
+        ],
+      ),
+    );
+
+    if (newName != null && newName.isNotEmpty && newName != wallpaper.name && context.mounted) {
+      final provider = Provider.of<WallpaperProvider>(context, listen: false);
+      await provider.updateWallpaperName(wallpaper, newName.trim());
+      if (context.mounted) {
+        Navigator.pop(context); // Refresh preview screen text by returning to home, or leave it (but provider update won't auto-refresh PreviewScreen if it's statelessly receiving 'wallpaper' param).
+        // Actually since we don't automatically rebuild PreviewScreen with the new entity, popping is safer.
+      }
+    }
+  }
+
+  Future<void> _setAlbum(BuildContext context) async {
+    final provider = Provider.of<WallpaperProvider>(context, listen: false);
+    final albums = provider.wallpapers.map((w) => w.album).where((a) => a != null).map((e) => e!).toSet().toList();
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF1E1E22),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+      builder: (context) => Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(width: 40, height: 4, margin: const EdgeInsets.symmetric(horizontal: 140), decoration: BoxDecoration(color: Colors.white30, borderRadius: BorderRadius.circular(2))),
+            const SizedBox(height: 24),
+            const Text('Add to Album', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+            const SizedBox(height: 16),
+            if (albums.isNotEmpty) ...[
+              const Text('Existing Albums', style: TextStyle(color: Colors.white54, fontSize: 13, fontWeight: FontWeight.w600)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: albums.map((album) => ActionChip(
+                  label: Text(album, style: const TextStyle(color: Colors.white)),
+                  backgroundColor: wallpaper.album == album ? const Color(0xFFE47C56) : Colors.white10,
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await provider.setWallpaperAlbum(wallpaper, album);
+                    if (context.mounted) Navigator.pop(context);
+                  },
+                )).toList(),
+              ),
+              const SizedBox(height: 16),
+            ],
+            FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: const Color(0xFFE47C56),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              onPressed: () async {
+                Navigator.pop(context);
+                final controller = TextEditingController();
+                final newAlbum = await showDialog<String>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    backgroundColor: const Color(0xFF1C1C1E),
+                    title: const Text('New Album', style: TextStyle(color: Colors.white)),
+                    content: TextField(
+                      controller: controller,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        hintText: 'Enter album name',
+                        hintStyle: TextStyle(color: Colors.white54),
+                        focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFFE47C56))),
+                      ),
+                      autofocus: true,
+                    ),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel', style: TextStyle(color: Colors.white70))),
+                      TextButton(onPressed: () => Navigator.pop(context, controller.text), child: const Text('Create', style: TextStyle(color: Color(0xFFE47C56)))),
+                    ],
+                  ),
+                );
+                
+                if (newAlbum != null && newAlbum.isNotEmpty && context.mounted) {
+                  await provider.setWallpaperAlbum(wallpaper, newAlbum.trim());
+                  if (context.mounted) Navigator.pop(context); // Refresh preview screen
+                }
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Create New Album'),
+            ),
+            if (wallpaper.album != null) ...[
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.redAccent,
+                  side: const BorderSide(color: Colors.redAccent),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                ),
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await provider.setWallpaperAlbum(wallpaper, null);
+                  if (context.mounted) Navigator.pop(context);
+                },
+                icon: const Icon(Icons.close),
+                label: const Text('Remove from Album'),
+              ),
+            ],
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
   }
 }
 
