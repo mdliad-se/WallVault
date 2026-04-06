@@ -27,15 +27,7 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [theme.colorScheme.primary.withAlpha(20), theme.colorScheme.secondary.withAlpha(20)],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ),
-        ),
-        child: Consumer<WallpaperProvider>(
+      body: Consumer<WallpaperProvider>(
           builder: (context, provider, child) {
             if (provider.isLoading) {
               return const Center(child: CircularProgressIndicator());
@@ -139,6 +131,8 @@ class HomeScreen extends StatelessWidget {
                                       child: Image.file(
                                         File(wallpaper.path),
                                         fit: BoxFit.cover,
+                                        cacheHeight: 800,
+                                        errorBuilder: (context, error, stack) => Icon(Icons.broken_image, color: Colors.grey[700]),
                                       ),
                                     ),
                                     Expanded(

@@ -61,12 +61,18 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'WallVault',
-        theme: ThemeData(
+        themeMode: ThemeMode.dark,
+        darkTheme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+          brightness: Brightness.dark,
+          scaffoldBackgroundColor: const Color(0xFF141417),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple, brightness: Brightness.dark),
           appBarTheme: const AppBarTheme(
             elevation: 0,
+            backgroundColor: Color(0xFF141417),
             surfaceTintColor: Colors.transparent,
+            iconTheme: IconThemeData(color: Colors.white),
+            titleTextStyle: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
           ),
         ),
         home: const HomeScreen(),

@@ -114,7 +114,9 @@ class WallpaperProvider with ChangeNotifier {
       final imageProvider = FileImage(File(path));
       final paletteGenerator = await PaletteGenerator.fromImageProvider(
         imageProvider,
-        maximumColorCount: 5,
+        size: const Size(200, 200),
+        region: const Rect.fromLTRB(0, 0, 200, 200),
+        maximumColorCount: 4,
       );
       final color = paletteGenerator.dominantColor?.color ?? paletteGenerator.vibrantColor?.color ?? paletteGenerator.mutedColor?.color ?? Colors.grey[800]!;
       _colorCache[path] = color;
