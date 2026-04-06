@@ -38,6 +38,7 @@ dependencies:
   image_picker: ^1.0.4
   path_provider: ^2.1.1
   flutter_wallpaper: ^0.0.8
+  palette_generator: ^0.3.3+7
 
 dev_dependencies:
   flutter_test:

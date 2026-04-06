@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:palette_generator/palette_generator.dart';
 
 import '../../domain/entities/wallpaper.dart' as entity;
 import '../../domain/usecases/add_wallpaper_from_gallery.dart';
@@ -20,6 +22,7 @@ class WallpaperProvider with ChangeNotifier {
   double _importProgress = 0.0;
   bool _isSettingWallpaper = false;
   double _settingProgress = 0.0;
+  final Map<String, Color> _colorCache = {};
 
   List<entity.Wallpaper> get wallpapers => _wallpapers;
   bool get isLoading => _isLoading;
@@ -100,6 +103,24 @@ class WallpaperProvider with ChangeNotifier {
       _isSettingWallpaper = false;
       _settingProgress = 0.0;
       notifyListeners();
+    }
+  }
+
+  Future<Color> getDominantColor(String path) async {
+    if (_colorCache.containsKey(path)) {
+      return _colorCache[path]!;
+    }
+    try {
+      final imageProvider = FileImage(File(path));
+      final paletteGenerator = await PaletteGenerator.fromImageProvider(
+        imageProvider,
+        maximumColorCount: 5,
+      );
+      final color = paletteGenerator.dominantColor?.color ?? paletteGenerator.vibrantColor?.color ?? paletteGenerator.mutedColor?.color ?? Colors.grey[800]!;
+      _colorCache[path] = color;
+      return color;
+    } catch (_) {
+      return Colors.grey[800]!;
     }
   }
 }

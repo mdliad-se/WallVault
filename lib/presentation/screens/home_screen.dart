@@ -106,7 +106,7 @@ class HomeScreen extends StatelessWidget {
                         crossAxisCount: 2,
                         crossAxisSpacing: 16,
                         mainAxisSpacing: 16,
-                        childAspectRatio: 0.85,
+                        childAspectRatio: 0.70, // Taller, Backdrop-like ratio
                       ),
                       itemCount: provider.wallpapers.length,
                       itemBuilder: (context, index) {
@@ -124,40 +124,65 @@ class HomeScreen extends StatelessWidget {
                                 ),
                               );
                             },
-                            child: Stack(
-                              children: [
-                                Positioned.fill(
-                                  child: Image.file(
-                                    File(wallpaper.path),
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                Positioned(
-                                  left: 0,
-                                  right: 0,
-                                  bottom: 0,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                          colors: [Colors.transparent, Colors.black.withAlpha(179)],
+                            child: FutureBuilder<Color>(
+                              future: provider.getDominantColor(wallpaper.path),
+                              builder: (context, snapshot) {
+                                final color = snapshot.data ?? Theme.of(context).colorScheme.surfaceContainerHighest;
+                                final isDarkColor = color.computeLuminance() < 0.5;
+                                final textColor = isDarkColor ? Colors.white : Colors.black87;
+
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(
+                                      flex: 5,
+                                      child: Image.file(
+                                        File(wallpaper.path),
+                                        fit: BoxFit.cover,
                                       ),
                                     ),
-                                    child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          wallpaper.createdAt.toLocal().toString().split(' ').first,
-                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                                    Expanded(
+                                      flex: 2,
+                                      child: AnimatedContainer(
+                                        duration: const Duration(milliseconds: 300),
+                                        color: color,
+                                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                mainAxisAlignment: MainAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                    'Vault Image',
+                                                    style: TextStyle(
+                                                      color: textColor,
+                                                      fontWeight: FontWeight.bold,
+                                                      fontSize: 14,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  Text(
+                                                    wallpaper.createdAt.toLocal().toString().split(' ').first,
+                                                    style: TextStyle(
+                                                      color: textColor.withAlpha(200),
+                                                      fontSize: 11,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Icon(Icons.open_in_full, size: 20, color: textColor),
+                                          ],
                                         ),
-                                        const Icon(Icons.open_in_full, color: Colors.white, size: 18),
-                                      ],
+                                      ),
                                     ),
-                                  ),
-                                ),
-                              ],
+                                  ],
+                                );
+                              },
                             ),
                           ),
                         );

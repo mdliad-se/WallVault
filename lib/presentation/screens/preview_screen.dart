@@ -14,102 +14,209 @@ class PreviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: Colors.black,
-      extendBodyBehindAppBar: true,
+      backgroundColor: const Color(0xFF141417), // Rich dark background
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         iconTheme: const IconThemeData(color: Colors.white),
-        title: Text('Preview', style: theme.textTheme.titleLarge?.copyWith(color: Colors.white)),
       ),
-      body: Stack(
-        fit: StackFit.expand,
-        children: [
-          Positioned.fill(
-            child: _ImageWithErrorHandling(wallpaperPath: wallpaper.path),
-          ),
-          Positioned.fill(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Colors.transparent, Colors.black.withAlpha(166)],
+      extendBodyBehindAppBar: true,
+      body: FutureBuilder<Color>(
+        future: Provider.of<WallpaperProvider>(context, listen: false).getDominantColor(wallpaper.path),
+        builder: (context, snapshot) {
+          final domColor = snapshot.data ?? const Color(0xFFD89B9B); // Fallback pinkish color
+          final isDark = domColor.computeLuminance() < 0.5;
+          final textColor = isDark ? Colors.white : Colors.black87;
+
+          return Stack(
+            children: [
+              SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: EdgeInsets.only(
+                  top: MediaQuery.of(context).padding.top + kToolbarHeight, 
+                  left: 20,
+                  right: 20,
+                  bottom: 40,
                 ),
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(28),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(46),
-                        border: Border.all(color: Colors.white30, width: 1),
-                        borderRadius: BorderRadius.circular(28),
-                      ),
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Text('Wallpaper actions', style: theme.textTheme.titleMedium?.copyWith(color: Colors.white)),
-                          const SizedBox(height: 12),
-                          Wrap(
-                            spacing: 12,
-                            runSpacing: 12,
-                            alignment: WrapAlignment.spaceBetween,
-                            children: [
-                              _ActionButton(
-                                label: 'Set Home',
-                                icon: Icons.home,
-                                onTap: () => _setWallpaper(context, wallpaper, 1, 'home'),
-                              ),
-                              _ActionButton(
-                                label: 'Set Lock',
-                                icon: Icons.lock,
-                                onTap: () => _setWallpaper(context, wallpaper, 2, 'lock'),
-                              ),
-                              _ActionButton(
-                                label: 'Set Both',
-                                icon: Icons.smartphone,
-                                onTap: () => _setWallpaper(context, wallpaper, 3, 'both'),
-                              ),
-                              _ActionButton(
-                                label: 'Delete',
-                                icon: Icons.delete,
-                                onTap: () => _deleteWallpaper(context, wallpaper),
-                                style: FilledButton.styleFrom(backgroundColor: theme.colorScheme.error),
-                              ),
-                            ],
-                          ),
-                        ],
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Image Header
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(24),
+                      child: Image.file(
+                        File(wallpaper.path),
+                        height: MediaQuery.of(context).size.height * 0.48,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stack) => Container(
+                          height: MediaQuery.of(context).size.height * 0.48,
+                          color: Colors.grey[900],
+                          child: const Center(child: Icon(Icons.broken_image, color: Colors.grey, size: 48)),
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 24),
+                    
+                    // Title Row
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                         Container(
+                           padding: const EdgeInsets.all(12),
+                           decoration: BoxDecoration(
+                             color: domColor,
+                             shape: BoxShape.circle,
+                           ),
+                           child: Icon(Icons.wallpaper, color: textColor, size: 24),
+                         ),
+                         const SizedBox(width: 16),
+                         Expanded(
+                           child: Column(
+                             crossAxisAlignment: CrossAxisAlignment.start,
+                             children: [
+                               const Text(
+                                 'Vault Image',
+                                 style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                               ),
+                               const SizedBox(height: 2),
+                               Text(
+                                 'Local Storage',
+                                 style: TextStyle(color: domColor, fontSize: 13, fontWeight: FontWeight.w600),
+                               ),
+                             ],
+                           ),
+                         ),
+                         Icon(Icons.verified, color: domColor, size: 20),
+                         const SizedBox(width: 16),
+                         const Icon(Icons.favorite_border, color: Colors.white, size: 26),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                    
+                    // Action Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              side: BorderSide(color: domColor.withAlpha(200), width: 1.5),
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+                            ),
+                            onPressed: () => _deleteWallpaper(context, wallpaper),
+                            icon: Icon(Icons.delete_outline, color: domColor),
+                            label: const Text('Delete', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: domColor,
+                              foregroundColor: textColor,
+                              padding: const EdgeInsets.symmetric(vertical: 18),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
+                            ),
+                            onPressed: () {
+                              showModalBottomSheet(
+                                context: context,
+                                backgroundColor: const Color(0xFF1E1E22),
+                                shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(28))),
+                                builder: (context) => _buildSetOptions(context, domColor, textColor),
+                              );
+                            },
+                            icon: const Icon(Icons.image),
+                            label: const Text('Set', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 28),
+                    
+                    // Description
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Text(
+                        'A little bit of peace, a little bit of offline privacy. Store and set your wallpapers entirely separated from your main gallery.',
+                        style: TextStyle(color: Colors.white70, fontSize: 13, height: 1.5),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    
+                    // Stats Grid
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1A1A1E),
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: FutureBuilder<double>(
+                        future: File(wallpaper.path).length().then((v) => v / (1024 * 1024)),
+                        builder: (context, sizeSnapshot) {
+                          final sizeMB = sizeSnapshot.data?.toStringAsFixed(2) ?? '-.--';
+                          return Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Icon(Icons.calendar_today, color: domColor, size: 20),
+                                  const SizedBox(width: 12),
+                                  Expanded(child: Text('Added: ${wallpaper.createdAt.toLocal().toString().split(' ').first}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12))),
+                                  Icon(Icons.folder, color: domColor, size: 20),
+                                  const SizedBox(width: 12),
+                                  Expanded(child: Text('$sizeMB MB', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12))),
+                                ],
+                              ),
+                              const SizedBox(height: 20),
+                              Row(
+                                children: [
+                                  Icon(Icons.info_outline, color: domColor, size: 20),
+                                  const SizedBox(width: 12),
+                                  const Expanded(child: Text('All Rights Reserved', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12, decoration: TextDecoration.underline))),
+                                  Icon(Icons.error_outline, color: domColor, size: 20),
+                                  const SizedBox(width: 12),
+                                  const Expanded(child: Text('Report', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12, decoration: TextDecoration.underline))),
+                                ],
+                              ),
+                            ],
+                          );
+                        }
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ),
-          Consumer<WallpaperProvider>(
-            builder: (context, provider, _) {
-              if (provider.isSettingWallpaper) {
-                return _WallpaperProgressDialog(progress: provider.settingProgress);
-              }
-              return const SizedBox.shrink();
-            },
-          ),
+              Consumer<WallpaperProvider>(
+                builder: (context, provider, _) {
+                  if (provider.isSettingWallpaper) {
+                    return _WallpaperProgressDialog(progress: provider.settingProgress);
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSetOptions(BuildContext context, Color domColor, Color textColor) {
+    return Padding(
+      padding: const EdgeInsets.all(24.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.white30, borderRadius: BorderRadius.circular(2))),
+          const SizedBox(height: 24),
+          _ActionButton(label: 'Set Home Screen', icon: Icons.home, onTap: () { Navigator.pop(context); _setWallpaper(context, wallpaper, 1, 'home'); }, style: FilledButton.styleFrom(backgroundColor: domColor, foregroundColor: textColor, minimumSize: const Size(double.infinity, 56))),
+          const SizedBox(height: 12),
+          _ActionButton(label: 'Set Lock Screen', icon: Icons.lock, onTap: () { Navigator.pop(context); _setWallpaper(context, wallpaper, 2, 'lock'); }, style: FilledButton.styleFrom(backgroundColor: domColor, foregroundColor: textColor, minimumSize: const Size(double.infinity, 56))),
+          const SizedBox(height: 12),
+          _ActionButton(label: 'Set Both', icon: Icons.smartphone, onTap: () { Navigator.pop(context); _setWallpaper(context, wallpaper, 3, 'both'); }, style: FilledButton.styleFrom(backgroundColor: domColor, foregroundColor: textColor, minimumSize: const Size(double.infinity, 56))),
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -169,70 +276,7 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
-class _ImageWithErrorHandling extends StatelessWidget {
-  final String wallpaperPath;
 
-  const _ImageWithErrorHandling({required this.wallpaperPath});
-
-  @override
-  Widget build(BuildContext context) {
-    final file = File(wallpaperPath);
-    return FutureBuilder<bool>(
-      future: file.exists(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Container(
-            color: Colors.grey[900],
-            child: const Center(
-              child: CircularProgressIndicator(color: Colors.white),
-            ),
-          );
-        }
-
-        if (!snapshot.hasData || !snapshot.data!) {
-          return _buildError(context, 'Image not found', 'This wallpaper may have been deleted');
-        }
-
-        return Image.file(
-          file,
-          fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) {
-            return _buildError(context, 'Failed to load image', error.toString());
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildError(BuildContext context, String title, String message) {
-    return Container(
-      color: Colors.grey[900],
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.broken_image,
-              size: 64,
-              color: Colors.grey[400],
-            ),
-            const SizedBox(height: 16),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.grey[400]),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              message,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[500]),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
 
 class _WallpaperProgressDialog extends StatefulWidget {
   final double progress;
