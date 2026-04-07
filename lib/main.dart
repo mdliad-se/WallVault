@@ -87,7 +87,7 @@ class MyApp extends StatelessWidget {
         builder: (context, themeProvider, child) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
-            title: 'WallVault',
+            title: 'WallStash',
             themeMode: ThemeMode.dark,
             darkTheme: ThemeData(
               useMaterial3: true,

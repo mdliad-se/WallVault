@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       Icon(Icons.wallpaper_rounded, color: Theme.of(context).colorScheme.primary, size: 32),
                       const SizedBox(width: 12),
-                      const Text('WallVault', style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: -0.5)),
+                      const Text('WallStash', style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: -0.5)),
                     ],
                   ),
                   Row(

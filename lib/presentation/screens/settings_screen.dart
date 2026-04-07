@@ -53,7 +53,7 @@ class SettingsScreen extends StatelessWidget {
           const ListTile(
             contentPadding: EdgeInsets.zero,
             leading: Icon(Icons.info_outline, color: Colors.white70),
-            title: Text('WallVault', style: TextStyle(color: Colors.white)),
+            title: Text('WallStash', style: TextStyle(color: Colors.white)),
             subtitle: Text('Offline wallpaper manager', style: TextStyle(color: Colors.white54)),
             trailing: Text('v1.0.0', style: TextStyle(color: Colors.white54)),
           ),
