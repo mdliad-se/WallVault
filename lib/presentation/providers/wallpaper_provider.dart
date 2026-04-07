@@ -70,6 +70,7 @@ class WallpaperProvider with ChangeNotifier {
         // Reload silently to avoid jank, but update list
         _wallpapers = await getWallpapers.execute();
         notifyListeners();
+        await Future.delayed(const Duration(milliseconds: 250));
       }
     }
 
@@ -113,6 +114,9 @@ class WallpaperProvider with ChangeNotifier {
     _isSettingWallpaper = true;
     _settingProgress = 0.0;
     notifyListeners();
+    
+    // Allow UI to draw bottom sheet close and progress indicator before heavy platform call stops main thread
+    await Future.delayed(const Duration(milliseconds: 300));
 
     Timer? progressTimer;
     var completed = false;

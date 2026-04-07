@@ -1,15 +1,55 @@
 import 'dart:io';
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_wallpaper/flutter_wallpaper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:palette_generator/palette_generator.dart';
 import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 import '../../domain/entities/wallpaper.dart' as entity;
 import '../datasources/wallpaper_local_datasource.dart';
 import '../models/wallpaper_model.dart';
+
+Future<Map<String, dynamic>?> _processImageInIsolate(Map<String, dynamic> params) async {
+  try {
+    final String sourcePath = params['sourcePath'];
+    final String destDir = params['destDir'];
+    final String originalName = params['originalName'];
+    final Set<String> existingHashes = params['existingHashes'];
+
+    final imageFile = File(sourcePath);
+    if (!imageFile.existsSync()) return null;
+
+    final bytes = imageFile.readAsBytesSync();
+    final fileHash = sha256.convert(bytes).toString();
+
+    if (existingHashes.contains(fileHash)) {
+      return {'status': 'exists', 'hash': fileHash};
+    }
+
+    final ext = p.extension(originalName).toLowerCase();
+    final finalExt = ext.isNotEmpty ? ext : '.jpg';
+    var cleanedName = p.basenameWithoutExtension(originalName).replaceAll(RegExp(r'[<>:"/\\|?*]'), '_').trim();
+    if (cleanedName.isEmpty) cleanedName = 'Vault_Image';
+
+    final fileName = '${DateTime.now().millisecondsSinceEpoch}_$cleanedName$finalExt';
+    final destPath = p.join(destDir, fileName);
+
+    final savedImage = imageFile.copySync(destPath);
+
+    return {
+      'status': 'added',
+      'hash': fileHash,
+      'savedPath': savedImage.path,
+      'originalName': cleanedName,
+    };
+  } catch (e) {
+    return null;
+  }
+}
 
 abstract class WallpaperRepository {
   Future<List<entity.Wallpaper>> getWallpapers();
@@ -42,36 +82,36 @@ class WallpaperRepositoryImpl implements WallpaperRepository {
       var imported = 0;
       final existingWallpapers = await localDataSource.getWallpapers();
       final existingHashes = existingWallpapers.map((w) => w.hash).toSet();
+      final directory = await getApplicationDocumentsDirectory();
 
       for (final pickedFile in pickedFiles) {
         try {
-          final imageFile = File(pickedFile.path);
-          if (await imageFile.exists()) {
-            final bytes = await imageFile.readAsBytes();
-            final fileHash = sha256.convert(bytes).toString();
+          final result = await compute(_processImageInIsolate, {
+            'sourcePath': pickedFile.path,
+            'destDir': directory.path,
+            'originalName': pickedFile.name,
+            'existingHashes': existingHashes,
+          });
 
-            if (existingHashes.contains(fileHash)) {
-              imported++;
-              onProgress?.call(imported, total);
-              continue;
+          if (result != null) {
+            final status = result['status'];
+            final fileHash = result['hash'];
+
+            if (status == 'added') {
+              final wallpaper = WallpaperModel(
+                path: result['savedPath'],
+                createdAt: DateTime.now(),
+                hash: fileHash,
+                name: result['originalName'],
+              );
+              await localDataSource.addWallpaper(wallpaper);
+              existingHashes.add(fileHash);
             }
-
-            final savedPath = await localDataSource.saveImage(imageFile);
-            final wallpaper = WallpaperModel(
-              path: savedPath,
-              createdAt: DateTime.now(),
-              hash: fileHash,
-              name: 'Vault Image',
-            );
-            await localDataSource.addWallpaper(wallpaper);
-            existingHashes.add(fileHash);
           }
         } catch (_) {
           // Skip this file if there's an error and continue with next
         } finally {
-          if (!existingHashes.contains(pickedFile.name)) {
-            imported++;
-          }
+          imported++;
           onProgress?.call(imported, total);
         }
       }
@@ -82,7 +122,8 @@ class WallpaperRepositoryImpl implements WallpaperRepository {
   Future<void> renameWallpaper(entity.Wallpaper wallpaper, String newName) async {
     final ext = p.extension(wallpaper.path);
     final dir = p.dirname(wallpaper.path);
-    final newPath = p.join(dir, '$newName$ext');
+    final sanitizedName = newName.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_').trim();
+    final newPath = p.join(dir, '${sanitizedName.isEmpty ? 'Wallpaper' : sanitizedName}$ext');
     final oldFile = File(wallpaper.path);
     if (await oldFile.exists()) {
       await oldFile.rename(newPath);
