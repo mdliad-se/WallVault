@@ -9,6 +9,7 @@ abstract class WallpaperLocalDataSource {
   Future<List<WallpaperModel>> getWallpapers();
   Future<void> addWallpaper(WallpaperModel wallpaper);
   Future<void> updateWallpaper(WallpaperModel wallpaper);
+  Future<void> updateWallpaperByOldPath(String oldPath, WallpaperModel wallpaper);
   Future<void> deleteWallpaper(String path);
   Future<void> deleteWallpapers(List<String> paths);
   Future<String> saveImage(File imageFile);
@@ -51,6 +52,16 @@ class WallpaperLocalDataSourceImpl implements WallpaperLocalDataSource {
   Future<void> updateWallpaper(WallpaperModel wallpaper) async {
     final wallpapers = await getWallpapers();
     final index = wallpapers.indexWhere((w) => w.path == wallpaper.path || w.hash == wallpaper.hash);
+    if (index != -1) {
+      wallpapers[index] = wallpaper;
+      await _saveWallpapers(wallpapers);
+    }
+  }
+
+  @override
+  Future<void> updateWallpaperByOldPath(String oldPath, WallpaperModel wallpaper) async {
+    final wallpapers = await getWallpapers();
+    final index = wallpapers.indexWhere((w) => w.path == oldPath);
     if (index != -1) {
       wallpapers[index] = wallpaper;
       await _saveWallpapers(wallpapers);

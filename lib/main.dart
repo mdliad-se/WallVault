@@ -10,6 +10,7 @@ import 'domain/usecases/set_wallpaper.dart';
 import 'domain/usecases/extract_palette.dart';
 import 'domain/usecases/rename_wallpaper.dart';
 import 'domain/usecases/update_wallpaper_album.dart';
+import 'presentation/providers/theme_provider.dart';
 import 'presentation/providers/wallpaper_provider.dart';
 import 'presentation/screens/home_screen.dart';
 
@@ -67,6 +68,9 @@ class MyApp extends StatelessWidget {
             Provider.of<WallpaperRepository>(context, listen: false),
           ),
         ),
+        ChangeNotifierProvider<ThemeProvider>(
+          create: (_) => ThemeProvider(),
+        ),
         ChangeNotifierProvider<WallpaperProvider>(
           create: (context) => WallpaperProvider(
             getWallpapers: Provider.of<GetWallpapers>(context, listen: false),
@@ -79,25 +83,30 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'WallVault',
-        themeMode: ThemeMode.dark,
-        darkTheme: ThemeData(
-          useMaterial3: true,
-          brightness: Brightness.dark,
-          scaffoldBackgroundColor: const Color(0xFF141417),
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple, brightness: Brightness.dark),
-          appBarTheme: const AppBarTheme(
-            elevation: 0,
-            backgroundColor: Color(0xFF141417),
-            surfaceTintColor: Colors.transparent,
-            iconTheme: IconThemeData(color: Colors.white),
-            titleTextStyle: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
-          ),
-        ),
-        home: const HomeScreen(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'WallVault',
+            themeMode: ThemeMode.dark,
+            darkTheme: ThemeData(
+              useMaterial3: true,
+              brightness: Brightness.dark,
+              scaffoldBackgroundColor: const Color(0xFF141417),
+              colorScheme: ColorScheme.fromSeed(seedColor: themeProvider.accentColor, brightness: Brightness.dark),
+              appBarTheme: const AppBarTheme(
+                elevation: 0,
+                backgroundColor: Color(0xFF141417),
+                surfaceTintColor: Colors.transparent,
+                iconTheme: IconThemeData(color: Colors.white),
+                titleTextStyle: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w600),
+              ),
+            ),
+            home: const HomeScreen(),
+          );
+        },
       ),
     );
   }
 }
+

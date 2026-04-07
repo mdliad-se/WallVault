@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import '../../domain/entities/wallpaper.dart' as entity;
 import '../providers/wallpaper_provider.dart';
+import '../widgets/wavy_progress_bar.dart';
 
 class PreviewScreen extends StatelessWidget {
   final entity.Wallpaper wallpaper;
@@ -489,26 +490,16 @@ class _WallpaperProgressDialogState extends State<_WallpaperProgressDialog> with
                           style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 24),
-                        SizedBox(
-                          height: 8,
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(4),
-                            child: TweenAnimationBuilder<double>(
-                              tween: Tween(begin: 0, end: widget.progress),
-                              duration: const Duration(milliseconds: 400),
-                              curve: Curves.easeInOut,
-                              builder: (context, progress, child) {
-                                return LinearProgressIndicator(
-                                  value: progress,
-                                  minHeight: 8,
-                                  backgroundColor: Colors.grey[800],
-                                  valueColor: AlwaysStoppedAnimation(
-                                    Theme.of(context).colorScheme.primary,
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
+                        TweenAnimationBuilder<double>(
+                          tween: Tween(begin: 0, end: widget.progress),
+                          duration: const Duration(milliseconds: 400),
+                          curve: Curves.easeInOut,
+                          builder: (context, progress, child) {
+                            return WavyProgressBar(
+                              progress: progress,
+                              height: 12,
+                            );
+                          },
                         ),
                         const SizedBox(height: 16),
                         Text(

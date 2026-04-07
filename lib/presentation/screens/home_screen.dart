@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/wallpaper_provider.dart';
+import '../search/wallpaper_search_delegate.dart';
+import '../widgets/wavy_progress_bar.dart';
 import 'preview_screen.dart';
+import 'settings_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,16 +29,31 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             // Custom Top Bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('Wallpaper Vault', style: TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w600)),
                   Row(
                     children: [
-                      const Icon(Icons.search, color: Colors.white70, size: 28),
-                      const SizedBox(width: 16),
-                      CircleAvatar(radius: 16, backgroundColor: Colors.grey[800], child: const Icon(Icons.person, size: 20, color: Colors.white)),
+                      Icon(Icons.wallpaper_rounded, color: Theme.of(context).colorScheme.primary, size: 32),
+                      const SizedBox(width: 12),
+                      const Text('WallVault', style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w700, letterSpacing: -0.5)),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.search, color: Colors.white70, size: 28),
+                        onPressed: () {
+                          showSearch(context: context, delegate: WallpaperSearchDelegate());
+                        },
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.settings, color: Colors.white70, size: 28),
+                        onPressed: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => const SettingsScreen()));
+                        },
+                      ),
                     ],
                   ),
                 ],
@@ -54,7 +72,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Text('Explore', style: TextStyle(color: _currentTab == 0 ? Colors.white : Colors.white54, fontSize: 16, fontWeight: _currentTab == 0 ? FontWeight.bold : FontWeight.w600)),
                         const SizedBox(height: 6),
-                        if (_currentTab == 0) Container(width: 40, height: 3, decoration: BoxDecoration(color: const Color(0xFFE47C56), borderRadius: BorderRadius.circular(2))),
+                        if (_currentTab == 0) Container(width: 40, height: 3, decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, borderRadius: BorderRadius.circular(2))),
                         if (_currentTab != 0) const SizedBox(height: 3),
                       ],
                     ),
@@ -65,7 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Text('Collections', style: TextStyle(color: _currentTab == 1 ? Colors.white : Colors.white54, fontSize: 16, fontWeight: _currentTab == 1 ? FontWeight.bold : FontWeight.w600)),
                         const SizedBox(height: 6),
-                        if (_currentTab == 1) Container(width: 40, height: 3, decoration: BoxDecoration(color: const Color(0xFFE47C56), borderRadius: BorderRadius.circular(2))),
+                        if (_currentTab == 1) Container(width: 40, height: 3, decoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, borderRadius: BorderRadius.circular(2))),
                         if (_currentTab != 1) const SizedBox(height: 3),
                       ],
                     ),
@@ -101,15 +119,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         if (provider.isImporting) ...[
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: LinearProgressIndicator(
-                              value: provider.importProgress,
-                              minHeight: 4,
-                              color: const Color(0xFFE47C56),
-                              backgroundColor: Colors.grey[900],
-                            ),
-                          ),
+                          WavyProgressBar(progress: provider.importProgress),
                           const SizedBox(height: 16),
                         ],
                         
@@ -140,7 +150,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFFE47C56),
+        backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
         onPressed: () async {
           final provider = Provider.of<WallpaperProvider>(context, listen: false);

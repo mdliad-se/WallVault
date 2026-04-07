@@ -123,11 +123,19 @@ class WallpaperRepositoryImpl implements WallpaperRepository {
     final ext = p.extension(wallpaper.path);
     final dir = p.dirname(wallpaper.path);
     final sanitizedName = newName.replaceAll(RegExp(r'[<>:"/\\|?*]'), '_').trim();
-    final newPath = p.join(dir, '${sanitizedName.isEmpty ? 'Wallpaper' : sanitizedName}$ext');
+    
+    String newPath = p.join(dir, '${sanitizedName.isEmpty ? 'Wallpaper' : sanitizedName}$ext');
+    int counter = 1;
+    while (await File(newPath).exists() && newPath != wallpaper.path) {
+      newPath = p.join(dir, '${sanitizedName.isEmpty ? 'Wallpaper' : sanitizedName}_$counter$ext');
+      counter++;
+    }
+
     final oldFile = File(wallpaper.path);
-    if (await oldFile.exists()) {
+    if (await oldFile.exists() && newPath != wallpaper.path) {
       await oldFile.rename(newPath);
     }
+    
     final model = WallpaperModel.fromEntity(wallpaper);
     final updatedModel = WallpaperModel(
       path: newPath,
@@ -137,7 +145,7 @@ class WallpaperRepositoryImpl implements WallpaperRepository {
       colorHex: model.colorHex,
       album: model.album,
     );
-    await localDataSource.updateWallpaper(updatedModel);
+    await localDataSource.updateWallpaperByOldPath(wallpaper.path, updatedModel);
   }
 
   @override
